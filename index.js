@@ -82,12 +82,13 @@ app.get("/edit/*", (req, res) => {
 
   fs.readFile(filePath, "utf-8", (err, content) => {
     if (err) return res.status(500).send("Erro ao ler o arquivo.");
-    res.render("edit", { fileName: req.params[0].split("/").pop(), content, isBinary: false, result: result });
+    res.render("edit", { fileName: req.params[0].split("/").pop(), content, isBinary: false, result: result, filePath: req.params[0] });
   });
 });
 app.post("/edit/*", (req, res) => {
   const filePath = path.join(baseDir, req.params[0]);
-  console.log(req.body)
+  
+  console.log(filePath)
   fs.writeFile(filePath, req.body.content, "utf-8", (err) => {
     if (err) return res.status(500).send("Erro ao salvar o arquivo.");
     res.status(200).send("Pronto!")
