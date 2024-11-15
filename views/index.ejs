@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerenciador de Arquivos</title>
+    <link rel="stylesheet" href="/public/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+  <body>
+    <h1>Gerenciador de Arquivos</h1>
+    <h2 style="margin-top: 2.5px !important; font-size: medium;"><%= currentDir %></h2>
+    <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 70%">Nome do Arquivo</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (currentDir && currentDir !== "/") { %>
+          <%
+            let path = currentDir;
+            let parts = path.startsWith("/") ? path.slice(1).split('/') : path.split("/");  // Divide a string em um array
+            parts.pop();  // Remove o último elemento
+            let result = parts.join('/');  // Junta novamente os elementos
+          %>
+          <td>
+            <a
+              href="/?dir=<%= result %>"
+              ><i class="fa-solid fa-turn-up"></i> <%= result %> (Voltar 1 diretório)</a
+            >
+          </td>
+          <td>
+            Nenhuma ação disponível
+          </td>
+        <% } %>
+        <% files.forEach(file => { %>
+        <tr>
+          <td>
+            <% if (file.isDirectory) { %>
+            <a
+              href="/?dir=<%= currentDir ? currentDir + '/' + file.name : file.name %>"
+              ><i class="fas fa-folder"></i> <%= file.name %></a
+            >
+            <% } else { %> 
+              <a
+                href="/edit/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
+                ><i class="fas fa-file"></i> <%= file.name %></a
+              > <% } %>
+          </td>
+          <td>
+            <% if (!file.isDirectory) { %>
+            <a
+              href="/edit/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
+              title="Editar"
+              ><i class="fas fa-edit"></i
+            ></a>
+            |
+            <a
+              href="/download/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
+              title="Baixar"
+              ><i class="fas fa-download"></i
+            ></a>
+            |
+            <% } %>
+            <a
+              href="/delete/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
+              style="color: red"
+              title="Deletar"
+              ><i class="fas fa-trash-alt"></i
+            ></a>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+
+    <div class="container">
+      <div class="card" style="display: flex; gap: 2px; height: 37px; text-align: center; justify-content: center; justify-self: center; justify-items: center;">
+        <form
+          id="uploadForm"
+          action="/upload"
+          method="post"
+          enctype="multipart/form-data"
+          class="drop_box"
+        >
+          <input type="file" name="file" id="fileID" hidden />
+          <button type="button" class="btn">
+            <i class="fas fa-upload"></i> Enviar arquivo
+          </button>
+        </form>
+        <button type="button" class="btn" id="create-dir-btn">
+          <i class="fas fa-folder"></i>Criar diretório</button>
+      
+      <script>
+        document.getElementById("create-dir-btn").addEventListener("click", function () {
+          // Show SweetAlert with input field for directory name
+          Swal.fire({
+            title: "Nome do Diretório",
+            input: "text",
+            inputLabel: "Digite o nome do diretório",
+            inputPlaceholder: "Nome do diretório",
+            showCancelButton: true,
+            confirmButtonText: "Criar",
+            cancelButtonText: "Cancelar",
+            inputValidator: (value) => {
+              if (!value) {
+                return "O nome do diretório é obrigatório!";
+              }
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const dirName = result.value;
+      
+              // Send a request to create the directory (assuming you're using fetch)
+              fetch("/create-directory", {
+                method: "POST",
+                body: new URLSearchParams({
+                  dirName: dirName,
+                  subdir: `<%= currentDir %>`, // Ensure this variable is being passed on server-side
+                }),
+              })
+                .then((response) => {
+                  if (response.ok) {
+                    // Display success SweetAlert
+                    Swal.fire({
+                      title: "Sucesso!",
+                      text: `Diretório "${dirName}" criado com sucesso!`,
+                      icon: "success",
+                      confirmButtonText: "OK",
+                    }).then(() => window.location.reload());
+                  } else {
+                    // Display error SweetAlert
+                    Swal.fire({
+                      title: "Erro!",
+                      text: "Ocorreu um erro ao criar o diretório.",
+                      icon: "error",
+                      confirmButtonText: "OK",
+                    });
+                  }
+                })
+                .catch((error) => {
+                  // Display error SweetAlert for request failure
+                  Swal.fire({
+                    title: "Erro!",
+                    text: "Ocorreu um erro na requisição.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                  });
+                });
+            }
+          });
+        });
+      </script>
+      
+    </div>
+
+    <script>
+      const dropArea = document.querySelector(".drop_box"),
+        button = dropArea.querySelector("button"),
+        input = dropArea.querySelector("input"),
+        form = document.getElementById("uploadForm");
+      const dir = `<%= currentDir %>`;
+      button.onclick = () => {
+        input.click(); // Abre o seletor de arquivos
+      };
+
+      input.addEventListener("change", function (e) {
+        if (e.target.files.length > 0) {
+          const file = e.target.files[0];
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("dir", dir);
+          fetch("/upload", {
+            method: "POST",
+            body: formData,
+          })
+            .then((data) => {
+              window.location.reload();
+            })
+            .catch((error) => console.error(error));
+        }
+      });
+    </script>
+  </body>
+</html>

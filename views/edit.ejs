@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Arquivo</title>
+    <link rel="stylesheet" href="/public/editor.css" />
+    <style>
+      #editor {
+        width: 100%;
+        height: 80vh;
+        border: 1px solid #ccc;
+      }
+      button {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Editando: <%= fileName %></h1>
+
+    <% if (isBinary) { %>
+    <p>O arquivo é binário e não pode ser editado como texto.</p>
+    <a href="<%= result %>">Voltar</a>
+    <% } else { %>
+    <form id="editForm">
+      <input type="hidden" name="content" id="content" />
+      <div id="editor"></div>
+      <div style="width: 100%; text-align: center">
+        <button type="submit">Salvar</button>
+        <a href="<%= result %>">Voltar</a>
+      </div>
+    </form>
+    <% } %>
+
+    <script src="/monaco/vs/loader.js"></script>
+    <script>
+      require.config({ paths: { vs: "/monaco/vs" } });
+      function convertToPlainText(html) {
+        let doc = new DOMParser().parseFromString(html, "text/html");
+        return doc.body.textContent || doc.body.innerText;
+      }
+      const content = convertToPlainText(`<%= content %>`);
+      const fileName = `<%= fileName %>`; // Inclua o nome do arquivo para ajudar na detecção de idioma
+      require(["vs/editor/editor.main"], function () {
+        const editor = monaco.editor.create(document.getElementById("editor"), {
+          value: content,
+          language: getLanguageFromFileName(fileName), // Chamada à função para detecção
+          theme: "vs-dark",
+          automaticLayout: true,
+          minimap: { enabled: false },
+        });
+
+        // Atualiza o campo oculto ao submeter o formulário
+        document
+          .getElementById("editForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            console.log(editor.getValue())
+            fetch("/edit/<%= fileName %>", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                content: editor.getValue(),
+              }),
+            });
+          });
+      });
+
+      // Função para mapear a extensão do arquivo ao idioma do Monaco
+      function getLanguageFromFileName(fileName) {
+        const extension = fileName.split(".").pop().toLowerCase();
+        const extensionToLanguageMap = {
+          js: "javascript",
+          ts: "typescript",
+          html: "html",
+          css: "css",
+          json: "json",
+          md: "markdown",
+          py: "python",
+          java: "java",
+          cpp: "cpp",
+          c: "c",
+          cs: "csharp",
+          php: "php",
+          rb: "ruby",
+          xml: "xml",
+          yml: "yaml",
+          sh: "shell",
+          txt: "plaintext",
+        };
+
+        return extensionToLanguageMap[extension] || "plaintext";
+      }
+    </script>
+  </body>
+</html>
