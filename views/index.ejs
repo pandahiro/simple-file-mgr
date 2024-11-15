@@ -97,8 +97,69 @@
         </form>
         <button type="button" class="btn" id="create-dir-btn">
           <i class="fas fa-folder"></i>Criar diretório</button>
+          <button type="button" class="btn" id="create-file-btn">
+            <i class="fas fa-file"></i>Criar arquivo</button>
       
       <script>
+
+document.getElementById("create-file-btn").addEventListener("click", function () {
+          // Show SweetAlert with input field for directory name
+          Swal.fire({
+            title: "Nome do Arquivo",
+            input: "text",
+            inputLabel: "Digite o nome do arquivo",
+            inputPlaceholder: "Nome do arquivo",
+            showCancelButton: true,
+            confirmButtonText: "Criar",
+            cancelButtonText: "Cancelar",
+            inputValidator: (value) => {
+              if (!value) {
+                return "O nome do arquivo é obrigatório!";
+              }
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const file = result.value;
+      
+              // Send a request to create the directory (assuming you're using fetch)
+              fetch("/create-file", {
+                method: "POST",
+                body: new URLSearchParams({
+                  fileName: file,
+                  subdir: `<%= currentDir %>`, // Ensure this variable is being passed on server-side
+                }),
+              })
+                .then((response) => {
+                  if (response.ok) {
+                    // Display success SweetAlert
+                    Swal.fire({
+                      title: "Sucesso!",
+                      text: `Arquivo "${file}" criado com sucesso!`,
+                      icon: "success",
+                      confirmButtonText: "OK",
+                    }).then(() => window.location.reload());
+                  } else {
+                    // Display error SweetAlert
+                    Swal.fire({
+                      title: "Erro!",
+                      text: "Ocorreu um erro ao criar o arquivo.",
+                      icon: "error",
+                      confirmButtonText: "OK",
+                    });
+                  }
+                })
+                .catch((error) => {
+                  // Display error SweetAlert for request failure
+                  Swal.fire({
+                    title: "Erro!",
+                    text: "Ocorreu um erro na requisição.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                  });
+                });
+            }
+          });
+        });
         document.getElementById("create-dir-btn").addEventListener("click", function () {
           // Show SweetAlert with input field for directory name
           Swal.fire({
