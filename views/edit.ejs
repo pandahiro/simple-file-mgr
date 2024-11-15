@@ -57,7 +57,7 @@
           .addEventListener("submit", function (e) {
             e.preventDefault();
             console.log(editor.getValue())
-            fetch("/edit/<%= fileName %>", {
+            fetch("/edit/<%= filePath %>", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
