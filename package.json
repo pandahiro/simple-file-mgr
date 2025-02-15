@@ -1,5 +1,5 @@
 {
-  "name": "mingau",
+  "name": "simple-file-mgr",
   "module": "index.js",
   "devDependencies": {
     "@types/bun": "latest"
