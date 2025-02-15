@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Editar Arquivo</title>
+    <title>Edit File</title>
     <link rel="stylesheet" href="/public/editor.css" />
     <style>
       #editor {
@@ -17,18 +17,18 @@
     </style>
   </head>
   <body>
-    <h1>Editando: <%= fileName %></h1>
+    <h1>Editing: <%= fileName %></h1>
 
     <% if (isBinary) { %>
-    <p>O arquivo é binário e não pode ser editado como texto.</p>
-    <a href="<%= result %>">Voltar</a>
+    <p>The file is binary and cannot be edited as text.</p>
+    <a href="<%= result %>">Back</a>
     <% } else { %>
     <form id="editForm">
       <input type="hidden" name="content" id="content" />
       <div id="editor"></div>
       <div style="width: 100%; text-align: center">
-        <button type="submit">Salvar</button>
-        <a href="<%= result %>">Voltar</a>
+        <button type="submit">Save</button>
+        <a href="<%= result %>">Back</a>
       </div>
     </form>
     <% } %>
@@ -41,17 +41,16 @@
         return doc.body.textContent || doc.body.innerText;
       }
       const content = convertToPlainText(`<%= content %>`);
-      const fileName = `<%= fileName %>`; // Inclua o nome do arquivo para ajudar na detecção de idioma
+      const fileName = `<%= fileName %>`;
       require(["vs/editor/editor.main"], function () {
         const editor = monaco.editor.create(document.getElementById("editor"), {
           value: content,
-          language: getLanguageFromFileName(fileName), // Chamada à função para detecção
+          language: getLanguageFromFileName(fileName),
           theme: "vs-dark",
           automaticLayout: true,
           minimap: { enabled: false },
         });
 
-        // Atualiza o campo oculto ao submeter o formulário
         document
           .getElementById("editForm")
           .addEventListener("submit", function (e) {
@@ -69,7 +68,6 @@
           });
       });
 
-      // Função para mapear a extensão do arquivo ao idioma do Monaco
       function getLanguageFromFileName(fileName) {
         const extension = fileName.split(".").pop().toLowerCase();
         const extensionToLanguageMap = {
