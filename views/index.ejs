@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gerenciador de Arquivos</title>
+    <title>File Manager</title>
     <link rel="stylesheet" href="/public/style.css" />
     <link
       rel="stylesheet"
@@ -12,224 +12,201 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
-    <h1>Gerenciador de Arquivos</h1>
+    <h1>File Manager</h1>
     <h2 style="margin-top: 2.5px !important; font-size: medium;"><%= currentDir %></h2>
     <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 70%">Nome do Arquivo</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (currentDir && currentDir !== "/") { %>
-          <%
-            let path = currentDir;
-            let parts = path.startsWith("/") ? path.slice(1).split('/') : path.split("/");  // Divide a string em um array
-            parts.pop();  // Remove o último elemento
-            let result = parts.join('/');  // Junta novamente os elementos
-          %>
-          <td>
-            <a
-              href="/?dir=<%= result %>"
-              ><i class="fa-solid fa-turn-up"></i> <%= result %> (Voltar 1 diretório)</a
-            >
-          </td>
-          <td>
-            Nenhuma ação disponível
-          </td>
-        <% } %>
-        <% files.forEach(file => { %>
-        <tr>
-          <td>
-            <% if (file.isDirectory) { %>
-            <a
-              href="/?dir=<%= currentDir ? currentDir + '/' + file.name : file.name %>"
-              ><i class="fas fa-folder"></i> <%= file.name %></a
-            >
-            <% } else { %> 
-              <a
-                href="/edit/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
-                ><i class="fas fa-file"></i> <%= file.name %></a
-              > <% } %>
-          </td>
-          <td>
-            <% if (!file.isDirectory) { %>
-            <a
-              href="/edit/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
-              title="Editar"
-              ><i class="fas fa-edit"></i
-            ></a>
-            |
-            <a
-              href="/download/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
-              title="Baixar"
-              ><i class="fas fa-download"></i
-            ></a>
-            |
-            <% } %>
-            <a
-              href="/delete/<%= currentDir ? currentDir + '/' + file.name : file.name %>"
-              style="color: red"
-              title="Deletar"
-              ><i class="fas fa-trash-alt"></i
-            ></a>
-          </td>
-        </tr>
-        <% }) %>
-      </tbody>
-    </table></div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 70%">File Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (currentDir && currentDir !== "/") { %>
+            <%
+              let path = currentDir;
+              let parts = path.startsWith("/") ? path.slice(1).split('/') : path.split("/");
+              parts.pop();
+              let result = parts.join('/');
+            %>
+            <tr>
+              <td>
+                <a href="/?dir=<%= result %>">
+                  <i class="fa-solid fa-turn-up"></i> <%= result %> (Go back one directory)
+                </a>
+              </td>
+              <td>No actions available</td>
+            </tr>
+          <% } %>
+          <% files.forEach(file => { %>
+            <tr>
+              <td>
+                <% if (file.isDirectory) { %>
+                  <a href="/?dir=<%= currentDir ? currentDir + '/' + file.name : file.name %>">
+                    <i class="fas fa-folder"></i> <%= file.name %>
+                  </a>
+                <% } else { %>
+                  <a href="/edit/<%= currentDir ? currentDir + '/' + file.name : file.name %>">
+                    <i class="fas fa-file"></i> <%= file.name %>
+                  </a>
+                <% } %>
+              </td>
+              <td>
+                <% if (!file.isDirectory) { %>
+                  <a href="/edit/<%= currentDir ? currentDir + '/' + file.name : file.name %>" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  |
+                  <a href="/download/<%= currentDir ? currentDir + '/' + file.name : file.name %>" title="Download">
+                    <i class="fas fa-download"></i>
+                  </a>
+                  |
+                <% } %>
+                <a href="/delete/<%= currentDir ? currentDir + '/' + file.name : file.name %>" style="color: red" title="Delete">
+                  <i class="fas fa-trash-alt"></i>
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
 
     <div class="container">
       <div class="card" style="display: flex; gap: 2px; height: 37px; text-align: center; justify-content: center; justify-self: center; justify-items: center;">
-        <form
-          id="uploadForm"
-          action="/upload"
-          method="post"
-          enctype="multipart/form-data"
-          class="drop_box"
-        >
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data" class="drop_box">
           <input type="file" name="file" id="fileID" hidden />
           <button type="button" class="btn">
-            <i class="fas fa-upload"></i> Enviar arquivo
+            <i class="fas fa-upload"></i> Upload File
           </button>
         </form>
         <button type="button" class="btn" id="create-dir-btn">
-          <i class="fas fa-folder"></i>Criar diretório</button>
-          <button type="button" class="btn" id="create-file-btn">
-            <i class="fas fa-file"></i>Criar arquivo</button>
-      
-      <script>
-
-document.getElementById("create-file-btn").addEventListener("click", function () {
-          // Show SweetAlert with input field for directory name
-          Swal.fire({
-            title: "Nome do Arquivo",
-            input: "text",
-            inputLabel: "Digite o nome do arquivo",
-            inputPlaceholder: "Nome do arquivo",
-            showCancelButton: true,
-            confirmButtonText: "Criar",
-            cancelButtonText: "Cancelar",
-            inputValidator: (value) => {
-              if (!value) {
-                return "O nome do arquivo é obrigatório!";
-              }
-            },
-          }).then((result) => {
-            if (result.isConfirmed) {
-              const file = result.value;
-      
-              // Send a request to create the directory (assuming you're using fetch)
-              fetch("/create-file", {
-                method: "POST",
-                body: new URLSearchParams({
-                  fileName: file,
-                  subdir: `<%= currentDir %>`, // Ensure this variable is being passed on server-side
-                }),
-              })
-                .then((response) => {
-                  if (response.ok) {
-                    // Display success SweetAlert
-                    Swal.fire({
-                      title: "Sucesso!",
-                      text: `Arquivo "${file}" criado com sucesso!`,
-                      icon: "success",
-                      confirmButtonText: "OK",
-                    }).then(() => window.location.reload());
-                  } else {
-                    // Display error SweetAlert
-                    Swal.fire({
-                      title: "Erro!",
-                      text: "Ocorreu um erro ao criar o arquivo.",
-                      icon: "error",
-                      confirmButtonText: "OK",
-                    });
-                  }
-                })
-                .catch((error) => {
-                  // Display error SweetAlert for request failure
-                  Swal.fire({
-                    title: "Erro!",
-                    text: "Ocorreu um erro na requisição.",
-                    icon: "error",
-                    confirmButtonText: "OK",
-                  });
-                });
-            }
-          });
-        });
-        document.getElementById("create-dir-btn").addEventListener("click", function () {
-          // Show SweetAlert with input field for directory name
-          Swal.fire({
-            title: "Nome do Diretório",
-            input: "text",
-            inputLabel: "Digite o nome do diretório",
-            inputPlaceholder: "Nome do diretório",
-            showCancelButton: true,
-            confirmButtonText: "Criar",
-            cancelButtonText: "Cancelar",
-            inputValidator: (value) => {
-              if (!value) {
-                return "O nome do diretório é obrigatório!";
-              }
-            },
-          }).then((result) => {
-            if (result.isConfirmed) {
-              const dirName = result.value;
-      
-              // Send a request to create the directory (assuming you're using fetch)
-              fetch("/create-directory", {
-                method: "POST",
-                body: new URLSearchParams({
-                  dirName: dirName,
-                  subdir: `<%= currentDir %>`, // Ensure this variable is being passed on server-side
-                }),
-              })
-                .then((response) => {
-                  if (response.ok) {
-                    // Display success SweetAlert
-                    Swal.fire({
-                      title: "Sucesso!",
-                      text: `Diretório "${dirName}" criado com sucesso!`,
-                      icon: "success",
-                      confirmButtonText: "OK",
-                    }).then(() => window.location.reload());
-                  } else {
-                    // Display error SweetAlert
-                    Swal.fire({
-                      title: "Erro!",
-                      text: "Ocorreu um erro ao criar o diretório.",
-                      icon: "error",
-                      confirmButtonText: "OK",
-                    });
-                  }
-                })
-                .catch((error) => {
-                  // Display error SweetAlert for request failure
-                  Swal.fire({
-                    title: "Erro!",
-                    text: "Ocorreu um erro na requisição.",
-                    icon: "error",
-                    confirmButtonText: "OK",
-                  });
-                });
-            }
-          });
-        });
-      </script>
-      
+          <i class="fas fa-folder"></i> Create Directory
+        </button>
+        <button type="button" class="btn" id="create-file-btn">
+          <i class="fas fa-file"></i> Create File
+        </button>
+      </div>
     </div>
 
     <script>
+      document.getElementById("create-file-btn").addEventListener("click", function () {
+        Swal.fire({
+          title: "File Name",
+          input: "text",
+          inputLabel: "Enter the file name",
+          inputPlaceholder: "File name",
+          showCancelButton: true,
+          confirmButtonText: "Create",
+          cancelButtonText: "Cancel",
+          inputValidator: (value) => {
+            if (!value) {
+              return "File name is required!";
+            }
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const file = result.value;
+
+            fetch("/create-file", {
+              method: "POST",
+              body: new URLSearchParams({
+                fileName: file,
+                subdir: `<%= currentDir %>`,
+              }),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  Swal.fire({
+                    title: "Success!",
+                    text: `File "${file}" created successfully!`,
+                    icon: "success",
+                    confirmButtonText: "OK",
+                  }).then(() => window.location.reload());
+                } else {
+                  Swal.fire({
+                    title: "Error!",
+                    text: "An error occurred while creating the file.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                  });
+                }
+              })
+              .catch((error) => {
+                Swal.fire({
+                  title: "Error!",
+                  text: "An error occurred during the request.",
+                  icon: "error",
+                  confirmButtonText: "OK",
+                });
+              });
+          }
+        });
+      });
+
+      document.getElementById("create-dir-btn").addEventListener("click", function () {
+        Swal.fire({
+          title: "Directory Name",
+          input: "text",
+          inputLabel: "Enter the directory name",
+          inputPlaceholder: "Directory name",
+          showCancelButton: true,
+          confirmButtonText: "Create",
+          cancelButtonText: "Cancel",
+          inputValidator: (value) => {
+            if (!value) {
+              return "Directory name is required!";
+            }
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const dirName = result.value;
+
+            fetch("/create-directory", {
+              method: "POST",
+              body: new URLSearchParams({
+                dirName: dirName,
+                subdir: `<%= currentDir %>`,
+              }),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  Swal.fire({
+                    title: "Success!",
+                    text: `Directory "${dirName}" created successfully!`,
+                    icon: "success",
+                    confirmButtonText: "OK",
+                  }).then(() => window.location.reload());
+                } else {
+                  Swal.fire({
+                    title: "Error!",
+                    text: "An error occurred while creating the directory.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                  });
+                }
+              })
+              .catch((error) => {
+                Swal.fire({
+                  title: "Error!",
+                  text: "An error occurred during the request.",
+                  icon: "error",
+                  confirmButtonText: "OK",
+                });
+              });
+          }
+        });
+      });
+
       const dropArea = document.querySelector(".drop_box"),
         button = dropArea.querySelector("button"),
         input = dropArea.querySelector("input"),
         form = document.getElementById("uploadForm");
       const dir = `<%= currentDir %>`;
+
       button.onclick = () => {
-        input.click(); // Abre o seletor de arquivos
+        input.click();
       };
 
       input.addEventListener("change", function (e) {
